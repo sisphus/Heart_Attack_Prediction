@@ -1,29 +1,140 @@
 ---
-title: "Heart_analysis_project"
-output: html_document
-date: "2024-02-15"
+title: "Heart Attack Analysis & Prediction_project"
+author: "Daemon Wei"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+    html_document:
+      toc: true
+      toc_float: true
+      code_folding: show
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
 ```
 
-## R Markdown
+## 1. Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Heart disease remains the leading cause of death globally, accounting for millions of deaths annually. The ability to accurately predict heart disease can lead to early diagnosis and intervention, significantly reducing the mortality rate associated with this condition. This project aims to leverage data science and machine learning techniques to analyze and predict the likelihood of heart attacks based on a wide range of factors including age, sex, chest pain type, resting blood pressure, serum cholesterol, and more.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Utilizing a dataset from Kaggle, this analysis will explore various features that may influence heart disease, implement several machine learning models to predict heart disease occurrence, and evaluate the performance of these models. The dataset includes diverse variables, offering a comprehensive insight into the factors that might contribute to heart disease.
 
-```{r cars}
-summary(cars)
+Through this project, we aim to uncover significant predictors of heart disease, assess the predictive power of machine learning models in a medical context, and ultimately, contribute to the efforts of preventing heart disease by enabling early detection. This endeavor is not only a technical challenge but also a crucial step towards saving lives and improving health outcomes.
+
+As we delve into the data and models, our goal is to present a clear, concise, and informative analysis that can serve as a foundation for further research and practical applications in the field of medical science and public health.
+
+### 1.1 Examining the Project Topic
+
+#### What is Heart Attack?
+
+![](image/WhatIsHeartAttack.png)
+
+
+* The medical name of heart attack is “Myocardial infarction”.
+* Heart attack in short; It is the occlusion of the vessel by plaque-like lesions filled with cholesterol and fat. 
+* The lesion is called abnormal conditions that occur in the organs where the disease is located.
+* As a result of the blockage, the blood flow is completely cut off and a heart attack that can lead to death occurs.
+
+#### How does a heart attack occur?
+
+![](image/Vessel.png)
+
+* The heart is like an efficient pump, tirelessly working to circulate blood throughout the body about 60 to 80 times a minute when we're at rest. Just like any other part of the body, the heart itself needs a steady supply of nutrients and oxygen, which it gets through its very own set of blood vessels known as coronary arteries.
+
+* Sometimes, these crucial arteries can have trouble with their blood flow due to blockages or narrowing, a condition known as coronary insufficiency. This issue can vary widely – it all depends on where the blockage is, how severe it is, and the specific arteries affected.
+
+* For some, this might just mean chest pain that pops up during a workout or some physical task, but goes away once they take a break. However, in more serious cases, if a coronary artery gets suddenly completely blocked, it can trigger a heart attack. This often starts with intense chest pain and, in the worst-case scenario, can lead to sudden death.
+
+### 1.2 Recognizing Variables In Dataset
+
+**Variable definitions in the Dataset**
+
+- **_Age_**: Age of the patient
+- **_Sex:_** Sex of the patient
+- **_exang:_** exercise induced angina (1 = yes; 0 = no)
+- **_ca:_** number of major vessels (0-3)
+- **_cp:_** Chest Pain type chest pain type
+    - Value 1: typical angina
+    - Value 2: atypical angina
+    - Value 3: non-anginal pain
+    - Value 4: asymptomatic
+- **_trtbps:_** resting blood pressure (in mm Hg)
+- **_chol:_** cholestoral in mg/dl fetched via BMI sensor
+- **_fbs:_** (fasting blood sugar > 120 mg/dl) (1 = true; 0 = false)
+- **_rest_ecg:_** resting electrocardiographic results
+    - Value 0: normal
+    - Value 1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV)
+    - Value 2: showing probable or definite left ventricular hypertrophy by Estes' criteria
+- **_thalach:_** maximum heart rate achieved
+- **_target:_** 0= less chance of heart attack 1= more chance of heart attack
+
+**Additional variable descriptions to help us**
+
+1. age - age in years
+
+2. sex - sex (1 = male; 0 = female)
+
+3. cp - chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 0 = asymptomatic)
+
+4. trestbps - resting blood pressure (in mm Hg on admission to the hospital)
+
+5. chol - serum cholestoral in mg/dl
+
+6. fbs - fasting blood sugar > 120 mg/dl (1 = true; 0 = false)
+
+7. restecg - resting electrocardiographic results (1 = normal; 2 = having ST-T wave abnormality; 0 = hypertrophy)
+
+8. thalach - maximum heart rate achieved
+
+9. exang - exercise induced angina (1 = yes; 0 = no)
+
+10. oldpeak - ST depression induced by exercise relative to rest
+
+11. slope - the slope of the peak exercise ST segment (2 = upsloping; 1 = flat; 0 = downsloping)
+
+12. ca - number of major vessels (0-3) colored by flourosopy
+
+13. thal - 2 = normal; 1 = fixed defect; 3 = reversable defect
+
+14. num - the predicted attribute - diagnosis of heart disease (angiographic disease status) (Value 0 = < diameter narrowing; Value 1 = > 50% diameter narrowing)
+
+## 2. First Organization
+
+### 2.1 Required Python Libraries
+
+#### 2.1.1 Basic Libraries
+
+```{r}
+library(corrplot)  # for the correlation plot
+library(discrim)  # for linear discriminant analysis
+library(corrr)   # for calculating correlation
+library(knitr)   # to help with the knitting process
+library(MASS)    # to assist with the markdown processes
+library(tidyverse)   # using tidyverse and tidymodels for this project mostly
+library(tidymodels)
+library(ggplot2)   # for most of our visualizations
+library(ggrepel)
+library(rpart.plot)  # for visualizing trees
+library(vip)         # for variable importance 
+library(janitor)     # for cleaning out our data
+library(ranger)   # for building our randomForest
+library(dplyr)     # for basic r functions
+library(yardstick) # for measuring certain metrics
+tidymodels_prefer()
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+#### 2.2 Loading The Dataset
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+Heart_data <- read_csv("data/heart.csv", show_col_types = FALSE)
+Heart_data
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## 3. Preparation for Exploratory Data Analysis(EDA)
+
+### 3.1 Examining Missing Values
+
+
+
