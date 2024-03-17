@@ -121,6 +121,7 @@ library(janitor)     # for cleaning out our data
 library(ranger)   # for building our randomForest
 library(dplyr)     # for basic r functions
 library(yardstick) # for measuring certain metrics
+library(naniar)
 tidymodels_prefer()
 ```
 
@@ -132,9 +133,47 @@ Heart_data <- read_csv("data/heart.csv", show_col_types = FALSE)
 Heart_data
 ```
 
+
 ## 3. Preparation for Exploratory Data Analysis(EDA)
 
 ### 3.1 Examining Missing Values
 
+```{r}
+vis_miss(Heart_data)
+```
+
+This plot shows us at a glance that there is no missing data in the whole dataset.
+
+### 3.2 Examining Unique Values
+
+```{r}
+unique_number <- sapply(Heart_data, function(x) length(unique(x)))
+unique_values_df <- data.frame("Total Unique Values" = unique_number)
+rownames(unique_values_df) <- names(Heart_data)
+print(unique_values_df)
+```
+#### Analysis Outputs(1)
+* **According to the result from the unique value dataframe;** 
+* We determined the variables with few unique values ​​as categorical variables, and the variables with high unique values ​​as numeric variables.
+* In this context, **Numeric Variables:** “age”, “trtbps”, “chol”, “thalachh” and “oldpeak ”
+* **Categorical Variables:** "sex", "cp", "fbs", "restecg", "exng", "slp", "caa", "thall", "output" 
+
+
+#### 3.3 Separating variables (Numeric or Categorical)
+
+```{r}
+numeric_var <- c("age", "trtbps", "chol", "thalachh", "oldpeak")
+
+categoric_var <- c("sex", "cp", "fbs", "restecg", "exng", "slp", "caa", "thall", "output")
+
+Heart_data %>%
+  select(numeric_var) %>%
+  summary()
+```
+## 4. Exploratory Data Analysis(EDA)
+
+### 4.1 Uni-variate Analysis
+
+#### 4.1.1 Numerical Variables(Analysis with **Distplot**)
 
 
