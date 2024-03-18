@@ -176,4 +176,133 @@ Heart_data %>%
 
 #### 4.1.1 Numerical Variables(Analysis with **Distplot**)
 
+```{r}
+ggplot(Heart_data, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  ggtitle("Age Distribution") +
+  xlab("Age") +
+  ylab("Frequency")
+```
+
+```{r}
+ggplot(Heart_data, aes(x = trtbps)) +
+  geom_histogram(binwidth = 5, fill = "red", color = "black") +
+  ggtitle(" resting blood pressure (in mm Hg) Distribution") +
+  xlab(" resting blood pressure (in mm Hg)") +
+  ylab("Frequency")
+```
+
+```{r}
+ggplot(Heart_data, aes(x = chol)) +
+  geom_histogram(binwidth = 5, fill = "purple", color = "black") +
+  ggtitle(" cholestoral Distribution") +
+  xlab(" cholestoral") +
+  ylab("Frequency")
+```
+
+
+
+```{r}
+ggplot(Heart_data, aes(x = thalachh)) +
+  geom_histogram(binwidth = 5, fill = "green", color = "black") +
+  ggtitle(" maximum heart rate achieved Distribution") +
+  xlab(" maximum heart rate achieved") +
+  ylab("Frequency")
+```
+
+
+```{r}
+ggplot(Heart_data, aes(x = oldpeak)) +
+  geom_histogram(binwidth = 0.5, fill = "blue", color = "black") +
+  ggtitle(" ST depression induced by exercise relative to rest Distribution") +
+  xlab(" ST depression induced by exercise relative to rest") +
+  ylab("Frequency")
+```
+
+#### Analysis Outputs(1)
+
+##### Age Variable
+* The vast majority of patients are between 50 and 60. 
+* There is a remarkable place on the chart. There is a decrease in patients between the ages of 47-and 50. 
+* It looks like there are no outliers in the variable.
+
+##### Trtbps Variable
+* The resting blood pressure of most patients is generally between 110 and 140. 
+* Values after 180 can be considered as outliers. 
+* There is hefty patient traffic between 115-120, 125-130, and 155-160 values.
+
+##### Cholesterol Variable
+* Cholesterol value in most patients is between 200-and 280.
+* Values after 380 can be considered as outliers.
+
+##### Thalach Variable
+* The maximum heart rate achieved in most patients is between 145-and 170.
+* In particular, The values before 80 can be considered outliers. 
+
+##### Oldpeak Variable
+* Values of the vast majority of patients in the variable range from 0 to 1.5. 
+* Especially values after 2.5 can be considered as outliers.
+
+#### 4.1.2 Categorical Variables(Analysis with **Pie Chart**)
+```{r}
+categoric_var
+```
+
+```{r}
+heart_data_summary_sex <- Heart_data %>%
+  count(sex) %>%
+  mutate(perc = n / sum(n))
+
+ggplot(heart_data_summary_sex, aes(x = "", y = n, fill = factor(sex))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#FF5733", "#33B5FF")) +
+  labs(title = "sex (Gender)", fill = "sex") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))   
+```
+
+```{r}
+heart_data_summary_cp <- Heart_data %>%
+  count(cp) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF", "#CDDC39", "#9C27B0")
+
+
+# 绘制饼图
+ggplot(heart_data_summary_cp, aes(x = "", y = n, fill = factor(cp))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "cp (Chest Pain type )", fill = "cp") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+```{r}
+heart_data_summary_fbs <- Heart_data %>%
+  count(fbs) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF")
+
+
+# 绘制饼图
+ggplot(heart_data_summary_fbs, aes(x = "", y = n, fill = factor(fbs))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "fbs (fasting blood sugar )", fill = "fbs") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
 
