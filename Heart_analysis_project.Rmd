@@ -172,7 +172,7 @@ Heart_data %>%
 ```
 ## 4. Exploratory Data Analysis(EDA)
 
-### 4.1 Uni-variate Analysis
+### 4.1 variable Analysis
 
 #### 4.1.1 Numerical Variables(Analysis with **Distplot**)
 
@@ -272,8 +272,6 @@ heart_data_summary_cp <- Heart_data %>%
 
 colors <- c("#FF5733", "#33B5FF", "#CDDC39", "#9C27B0")
 
-
-# 绘制饼图
 ggplot(heart_data_summary_cp, aes(x = "", y = n, fill = factor(cp))) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(theta = "y") +
@@ -293,7 +291,7 @@ heart_data_summary_fbs <- Heart_data %>%
 colors <- c("#FF5733", "#33B5FF")
 
 
-# 绘制饼图
+
 ggplot(heart_data_summary_fbs, aes(x = "", y = n, fill = factor(fbs))) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(theta = "y") +
@@ -306,3 +304,342 @@ ggplot(heart_data_summary_fbs, aes(x = "", y = n, fill = factor(fbs))) +
         legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
 ```
 
+```{r}
+heart_data_summary_restecg <- Heart_data %>%
+  count(restecg) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF", "#CDDC39")
+
+
+
+ggplot(heart_data_summary_restecg, aes(x = "", y = n, fill = factor(restecg))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "restecg (resting electrocardiographic results)", fill = "restecg") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_exng <- Heart_data %>%
+  count(exng) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#CDDC39")
+
+
+
+ggplot(heart_data_summary_exng, aes(x = "", y = n, fill = factor(exng))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "exng (exercise induced angina)", fill = "exng") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_slp <- Heart_data %>%
+  count(slp) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#CDDC39", "#9C27B0")
+
+
+
+ggplot(heart_data_summary_slp, aes(x = "", y = n, fill = factor(slp))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "slp (the slope of the peak exercise ST segment)", fill = "slp") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_caa <- Heart_data %>%
+  count(caa) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_caa, aes(x = "", y = n, fill = factor(caa))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "caa (number of major vessels)", fill = "caa") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_thall <- Heart_data %>%
+  count(thall) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_thall, aes(x = "", y = n, fill = factor(thall))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "thall (Thallium stress test)", fill = "thall") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_output <- Heart_data %>%
+  count(output) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_output, aes(x = "", y = n, fill = factor(output))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "output (diagnosis of heart disease)", fill = "output") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+##### 4.1.2.1 Analysis Outputs(2) <a id = 22></a>
+
+#### Sex Variable
+* **68%** of the patients are **male**, **32%** are **female**.
+* So, the number of male patients is more than twice that of female patients.
+
+#### Cp Variable
+* Almost half of the patients have an observation value of 0. In other words, there is asymptomatic angina
+* Half of the patients are asymptomatic; they have pain without symptoms.
+* If we examine the other half of the pie chart, 1 out of 4 patients has an observation value of 2.
+* In other words, atypical angina is in **29%** of the patients.
+* This observation value shows patients with shortness of breath or non-classical pain.
+* The other two observation values are less than the others.
+* **16.5%** of patients have a value of 1. In other words, typical angina is seen. Typical angina is the classic exertion pain that comes during any physical activity.
+* The other **8%** has the value of non-anginal pain, which is three types of angina.
+* Non-anginal pain is the term used to describe chest pain that is not caused by heart disease or a heart attack.
+
+#### Fbs Variable
+* The vast majority of patients have an observation value of 1. In other words, **85%**.
+* The fasting blood sugar of these patients is more than 120 mg/dl. 
+* The remaining 15 percent have a less than 120 mg/dl fasting blood glucose level. 
+
+#### Restecg Variable
+* The thing that draws attention to the image of this variable is that the number of patients with two observation values is negligible. 
+* It has a value of **1.3 percent**. When we look at all of these patients, **it is not a very important number**.
+* This value represents the ST and T wavelengths of the patients.
+* Another point that draws attention to this graph is; The total numbers of other patients with observation values of 1 and 0 are almost equal. 
+* The size of those with 1, that is, the orange part on the graph is **50.2%**
+* This means that the resting electrocardiographic results of these patients are **normal**. 
+* The percentage of patients with a value of 0 is **48.5%**. 
+* That is, the patients' values of **48.5%** are **normal**.
+
+#### Exang Variable
+* We have said that this variable stands for exercise-induced angina.
+* Angina is the chest pain caused by the coronary artery's involuntary contraction that feeds the heart.
+* According to the variable "exang," the pain caused by this angina is represented by a value of 1 if it occurs with any exercise and 0 if it does not.
+* In this context, Values 0 are more than twice as values 1. More than half of the patients do not have exercise-induced angina.
+
+#### Slp Variable
+* The minimum observation value is 0 with **7 percent**. 
+* This is patients with a downward slope of the ST wavelength.
+* The other two observation values are almost equal to each other. 
+* The ST wavelength of half of the remaining patients is 1, that is straight, while the observation value of the other half is 2, that is, the ST wavelength is sloped upwards.
+
+#### Caa variable 
+* This variable is the number of great vessels colored by fluoroscopy. 
+* In more than half of the patients, **57.8 percent**, the number of large vessels is 0. That is, the number of large vessels colored by fluoroscopy is absent.
+* After 0 observation value, the other value with the most slices in the pie chart 1
+* The number of large vessels observed in **21.5%** of the patients is 1
+* The majority of patients have an occlusion in their veins. Therefore, large vessels cannot be observed with the fluoroscopy technique.
+
+#### Thall Variable
+* The "Thal" variable is short for the "Thallium stress test."
+* The thallium stress test is simply an imaging method that evaluates the amount of blood reaching the heart muscle and determines whether a person has coronary artery disease.
+* There are three observation values in the description of this variable. However, the pie chart shows four values. Values **0, 1, 2 and 3**.
+* According to our research, the observation value of 0 is null. Therefore, in the next step, 0 observation values will be returned to null and filled with logical data.
+* In this context, according to the thallium stress test results, **54.8 percent** of the patients have two observation values, so the test result appears to be expected.
+* **36.8 percent** has a value of **3**, so we can say that this value is a reversible defect as an explanation.
+* **5.9 percent** of patients have a value of **1**, so the test result for these patients is a fixed defect.
+
+#### Output Variable
+* More than half of the patients, **54.5 percent**, have a heart attack risk. The remaining **45.5 percent** have no heart attack risk.
+
+
+#### 4.1.2.2 Examining the Missing Data According to the Analysis Result
+
+```{r}
+thal_zero_rows <- Heart_data %>% filter(thall == 0)
+thal_zero_rows
+```
+
+```{r}
+# 0 will be filled with 2 that is most common value in thall
+Heart_data$thall[Heart_data$thall == 0] <- 2
+
+unique_thal_categories <- unique(Heart_data$thall)
+unique_thal_categories
+```
+
+```{r}
+vis_miss(Heart_data)
+```
+
+#### 4.2.3 Numerical Variables - Categorical Variables (Analysis with **Box Plot**)
+
+```{r}
+Heart_data_long <- Heart_data %>%
+  gather(key = "variables", value = "value", trtbps, chol, thalachh)
+
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(sex))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "Sex") 
+
+```
+
+```{r}
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(cp))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "Cp") 
+```
+
+```{r}
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output") 
+```
+
+```{r}
+Heart_data_long_2 <- Heart_data %>%
+  gather(key = "variables", value = "value",age)
+
+ggplot(Heart_data_long_2, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output") 
+```
+
+```{r}
+Heart_data_long_3 <- Heart_data %>%
+  gather(key = "variables", value = "value",oldpeak)
+
+ggplot(Heart_data_long_3, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output")
+```
+
+#### 4.2.3.1 Analysis Outputs(3)
+
+##### Sex - Numeric Variables
+
+* There is no very high correlation between "sex" and numerical variables. There is a weak relationship with all of them.
+* When the boxes of the observation values ​​of the gender variable are examined, it is seen that it is difficult to distinguish from each other.
+
+##### Output - Numeric Variables
+
+* In the "old peak" variable, the median value of the blue box goes outside the red box. In other words, it shows that there is a more significant relationship between the "old peak" variable and the target compared to other numerical variables. We can say that there is a medium level of correlation.
+* There is also a correlation between the "thalach" and the output variables. Again, the median of the blue box goes outside the red box. This is an indication that there is a correlation compared to the others.
+* When we examine the other three variables, there is not much correlation.
+
+#### 4.3 Relationships between variables
+
+```{r}
+cor_mat <- cor(Heart_data)
+corrplot(cor_mat, method = "color", 
+         addCoef.col = "black",   
+         tl.cex = 0.8,            
+         number.cex = 0.6,        
+         cl.cex = 0.8,            
+         tl.col = "black",        
+         tl.srt = 45,             
+         order = "hclust" )            
+
+```
+#### 4.2.3.1 Analysis Outputs(4)
+
+##### Age Variable
+
+* The variable with the highest correlation with the "age" variable is the "thalachh" variable. There is a negative correlation between them, which we can call moderately. 
+* The severity of the correlation is -0.40. In other words, there is an inverse relationship between the "age" and "thalachh" variables. 
+
+##### Trtbps Variable
+
+* The variable with the highest correlation with the "trtbps" variable is the "age" variable. The correlation between them is 0.28
+* There is a positive low-intensity correlation.
+
+##### Chol Variable
+
+* The variable with the highest correlation with the "chol" variable is the "age" variable
+* There is a correlation with a magnitude of 0.21. This is a low positive correlation. 
+* So, we can say that as age increases, cholesterol also increases.
+
+##### Thalachh Variable
+
+* The variable with the highest correlation to the "Thalachh" variable is the "output" variable. 
+* There is a 0.42 positive and moderate correlation between them. In other words, it is a variable that can directly trigger a heart attack.
+* There is a variable with which this variable has many correlations. 
+* It means that the maximum heart rate reached maybe a situation triggered by other variables.
+
+##### Oldpeak Variable
+
+* It has the most significant correlation ratio among this changing table. This correlation is -0.58 with the "slp" variable. 
+* There is a negative correlation between them, which is slightly above medium intensity. 
+
+##### Sex Variable
+
+* There is no robust correlation between the variable "Sex" and other variables.
+
+##### Fbs Variable
+
+* The "Fbs" variable generally does not correlate with other variables. 
+* The highest correlation with 0.18 belongs to the "trtbps" variable. There is a low positive correlation.
+
+##### Restecg Variable
+
+* There is no strong correlation between the "Rest_ecg" variable and other variables.
+* The highest correlation was 0.14 with the "output" variable. There is a positive low-intensity correlation.
+
+##### output Variable
+
+* The "output" variable correlates with more than one variable.
+
+## 5. Preparation for Modeling
+
+### 5.1 Dropping Columns with Low Correlation
+
+```{r}
+Heart_data <- Heart_data %>% select(-c(chol, fbs, restecg))
+Heart_data
+```
+
+### 5.2 
