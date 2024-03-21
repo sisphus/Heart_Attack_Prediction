@@ -748,11 +748,427 @@ final_fit_knn_class <- fit(final_wf_knn_class, heart_train)
 augment(final_fit_knn_class, new_data = heart_test) %>%
   roc_auc(output, .pred_0)
 ```
+The output tibble shows a ROC AUC of 0.9339 on the test set, indicating that the model also has strong classification ability on unseen data. It is noteworthy that the ROC AUC value on the test set is even higher than the average value in cross-validation, which is a very positive result. However, caution should be taken to consider the possibility of overly optimistic evaluations or data leakage.
+
+Overall, this result should provide a high level of confidence, indicating that the model is likely to perform well in practical applications. 
+
+We can calculate accuracies on the training data:
+
+```{r}
+knn_acc_train <- augment(final_fit_knn_class, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+knn_acc_train
+```
+
+We can calculate accuracies on the testing data:
+
+```{r}
+knn_acc_test <- augment(final_fit_knn_class, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+knn_acc_test
+```
+The model's accuracy on the training data is approximately 91.32%, while on the testing data, it is around 83.61%. These figures indicate that the KNN model is performing quite well, although it exhibits some degree of overfitting, as indicated by the higher accuracy on the training data compared to the testing data. 
 
 
+### 6.2 Logistic Regression
 
 
+```{r}
+
+log_reg <- logistic_reg() %>% 
+  set_engine("glm") %>% 
+  set_mode("classification")
+```
+
+```{r}
+log_wkflow <- workflow() %>% 
+  add_model(log_reg) %>% 
+  add_recipe(heart_recipe)
+
+log_fit_results <- fit(log_wkflow,heart_train)
+
+log_fit_results %>% tidy()
+```
+We can use each of these models to generate probability predictions for the training data:
+
+```{r}
+predict(log_fit_results, new_data = heart_train, type = "prob")
+```
+
+However, it’s more useful to summarize the predicted values. We can use augment() to attach the predicted values to the data, then generate a confusion matrix for Heart:
+
+```{r}
+augment(log_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+   autoplot(type = "heatmap")
+```
+
+We can calculate accuracies on the training data:
+
+```{r}
+log_acc_train <- augment(log_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+log_acc_train
+```
 
 
+Let’s calculate the accuracy of the logistic regression model, or the average number of correct predictions it made on the testing data.
+
+```{r}
+augment(log_fit_results, new_data = heart_test) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+   autoplot(type = "heatmap")
+```
+We can calculate accuracies on the testing data:
+
+```{r}
+log_acc_test <- augment(log_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+log_acc_test
+```
+```{r}
+log_roc_train <- augment(log_fit_results, new_data = heart_train) %>%
+  roc_auc(output, .pred_0)
+log_roc_train
+```
+
+```{r}
+log_roc_test <- augment(log_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+log_roc_test
+```
 
 
+let’s look at an ROC curve on the testing data:
+
+```{r}
+augment(log_fit_results, new_data = heart_test) %>%
+  roc_curve(output, .pred_0) %>%
+  autoplot()
+```
+
+
+### 6.3 LDA (linear discriminant analysis)
+
+```{r}
+# Specify the linear discriminant analysis model
+lda_model <- discrim_linear() %>%
+  set_engine("MASS") %>%
+  set_mode("classification")
+
+
+# Create the workflow with the LDA model
+lda_workflow <- workflow() %>%
+  add_model(lda_model) %>%
+  add_recipe(heart_recipe)
+
+# Fit the LDA model
+lda_fit_results <- fit(lda_workflow, data = heart_train)
+```
+
+```{r}
+augment(lda_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+   autoplot(type = "heatmap")
+```
+
+We can calculate accuracies on the training data:
+
+```{r}
+lda_acc_train <- augment(lda_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+lda_acc_train
+```
+We can calculate accuracies on the testing data:
+
+```{r}
+lda_acc_test <- augment(lda_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+lda_acc_test
+```
+accuracy on the testing data is greater than that of training data.
+
+```{r}
+lda_roc_test <- augment(lda_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+lda_roc_test
+```
+
+### 6.4 QDA (quadratic discriminant analysis)
+
+```{r}
+# Specify the quadratic discriminant analysis model
+qda_model <- discrim_quad() %>%
+  set_engine("MASS") %>%
+  set_mode("classification")
+
+# Create the workflow with the QDA model
+qda_workflow <- workflow() %>%
+  add_model(qda_model) %>%
+  add_recipe(heart_recipe)
+
+qda_fit_results <- fit(qda_workflow, data = heart_train)
+```
+
+```{r}
+augment(qda_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+   autoplot(type = "heatmap")
+```
+
+We can calculate accuracies on the training data:
+
+```{r}
+qda_acc_train <- augment(qda_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+qda_acc_train
+```
+
+We can calculate accuracies on the testing data:
+
+```{r}
+qda_acc_test <- augment(qda_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+qda_acc_test
+```
+These results suggest that the model performs well on both the training and unseen testing data, although there is a slight decrease in performance on the testing data, which is common as models generally perform slightly better on the data they were trained on.
+
+```{r}
+qda_roc_test <- augment(qda_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+qda_roc_test
+```
+
+### 6.5 Regularized Regression
+
+```{r}
+en_spec_lm_class <- logistic_reg(mixture = tune(),
+                         penalty = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+en_grid <- grid_regular(penalty(range = c(0, 1)),
+                        mixture(range = c(0, 1)),
+                             levels = 10)
+
+en_workflow_lm_class <- workflow()%>%
+  add_model(en_spec_lm_class) %>%
+  add_recipe(heart_recipe)
+```
+
+```{r}
+en_tune_res_class <- tune_grid(
+  object = en_workflow_lm_class, 
+  resamples = heart_folds, 
+  grid = en_grid
+)
+```
+
+```{r}
+# For elastic net logistic regression model
+en_metrics_class <- en_tune_res_class %>% 
+  collect_metrics()
+
+en_auc <- en_metrics_class %>% filter(.metric == "roc_auc")
+
+# Print AUC results
+print(en_auc)
+```
+
+```{r}
+best_en_class <- select_best(en_tune_res_class, metric = "roc_auc")
+
+en_wf_final_class <- finalize_workflow(en_workflow_lm_class, best_en_class)
+
+# Fit the finalized workflow to the training set
+final_fit_en_class <- fit(en_wf_final_class, data = heart_train)
+
+```
+
+We can calculate accuracies on the training data:
+
+```{r}
+en_acc_train <- augment(final_fit_en_class, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+en_acc_train
+```
+We can calculate accuracies on the testing data:
+
+```{r}
+en_acc_test <- augment(final_fit_en_class, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+en_acc_test
+```
+```{r}
+en_roc_test <- augment(final_fit_en_class, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+en_roc_test
+```
+
+### 6.6 Pruned Decision Trees
+
+```{r}
+tree_spec <- decision_tree(cost_complexity = tune()) %>%
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+tree_wf <- workflow() %>% 
+  add_model(tree_spec) %>% 
+  add_recipe(heart_recipe)
+```
+
+```{r}
+param_grid <- grid_regular(cost_complexity(range = c(-5, -1)), levels = 10)
+
+tune_tree <- tune_grid(
+  tree_wf, 
+  resamples = heart_folds, 
+  grid = param_grid
+)
+```
+
+
+```{r}
+autoplot(tune_tree)
+```
+
+```{r}
+best_complexity <- select_best(tune_tree)
+
+tree_final <- finalize_workflow(tree_wf, best_complexity)
+
+tree_final_fit <- fit(tree_final, data = heart_train)
+best_complexity
+```
+
+we can extract the model fit results and view them with the rpart.plot() function
+
+```{r}
+tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot()
+```
+
+We can calculate accuracies on the training data:
+
+```{r}
+tree_acc_train <- augment(tree_final_fit, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+tree_acc_train
+```
+We can calculate accuracies on the testing data:
+
+```{r}
+tree_acc_test <- augment(tree_final_fit, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+tree_acc_test
+```
+
+The accuracy on the training data is approximately 86.36%, and it decreases to about 78.69% on the testing data. This drop in accuracy from training to testing suggests that the decision tree model might be overfitting to the training data or not generalizing well to new, unseen data.
+
+
+```{r}
+tree_roc_test <- augment(tree_final_fit, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+tree_roc_test
+```
+
+### 6.7 Random Forest
+
+```{r}
+rf_class_spec <- rand_forest(mtry = tune(), 
+                           trees = tune(), 
+                           min_n = tune()) %>%
+  set_engine("ranger", importance = "impurity") %>% 
+  set_mode("classification")
+
+rf_class_wf <- workflow() %>% 
+  add_model(rf_class_spec) %>% 
+  add_recipe(heart_recipe)
+```
+
+```{r}
+rf_grid <- grid_regular(mtry(range = c(1, 10)), 
+                        trees(range = c(200, 600)),
+                        min_n(range = c(10, 20)),
+                        levels = 5)
+
+rf_tune_class <- tune_grid(
+  rf_class_wf,
+  resamples = heart_folds,
+  grid = rf_grid
+)
+```
+
+
+```{r}
+save(rf_tune_class, file = "rf_tune_class.rda")
+load("rf_tune_class.rda")
+```
+
+```{r}
+autoplot(rf_tune_class) + theme_minimal()
+```
+```{r}
+best_rf_class <- select_best(rf_tune_class)
+best_rf_class
+```
+```{r}
+final_rf_model <- finalize_workflow(rf_class_wf, best_rf_class)
+final_rf_model <- fit(final_rf_model, heart_train)
+```
+
+```{r}
+final_rf_model %>% extract_fit_parsnip() %>% 
+  vip() +
+  theme_minimal()
+```
+We can calculate accuracies on the training data:
+
+```{r}
+rf_acc_train <- augment(final_rf_model, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+rf_acc_train
+```
+We can calculate accuracies on the testing data:
+
+```{r}
+rf_acc_test <- augment(final_rf_model, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+rf_acc_test
+```
+The model’s accuracy is reported to be approximately 91.32% on the training data, with a slight decrease to about 90.16% on the testing data. These results indicate that the random forest model has a strong performance and generalizes well to unseen data, with only a small drop in accuracy between the training and testing sets, which suggests a good balance between bias and variance.
+
+```{r}
+rf_roc_test <- augment(final_rf_model, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+rf_roc_test
+```
+
+## 7. Project Conclusion
+
+1. Within the scope of the project, I first made the data set ready for **Exploratory Data Analysis(EDA)**
+
+2. performed **Exploratory Data Analysis(EDA)**. 
+
+3. Analyzed numerical and categorical variables.
+
+4. made the data set ready for the model.
+
+5. used **seven different algorithms** in the model phase.
+
+6. got **83% accuracy** and **93% AUC** with the **KNN model**.
+
+7. got **85% accuracy** and **93% AUC** with the **Logistic Regression Model**.
+
+8. got **85% accuracy** and **93% AUC** with the **LDA (linear discriminant analysis) Model**.
+
+9. got **82% accuracy** and **88% AUC** with the **QDA (quadratic discriminant analysis)**.
+
+10. got **75% accuracy** and **93.3% AUC** with the **Regularized Regression Model**.
+
+11. got **78% accuracy** and **82% AUC** with the **Pruned Decision Trees Model**.
+
+12. got **90.2% accuracy** and **95% AUC** with the **Random Forest Model**.
+
+13. When all these model outputs are evaluated, I **prefer** the model we created with the **Random Forest Algorithm**, which gives the **best results**.
