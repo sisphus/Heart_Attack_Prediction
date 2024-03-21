@@ -122,6 +122,8 @@ library(ranger)   # for building our randomForest
 library(dplyr)     # for basic r functions
 library(yardstick) # for measuring certain metrics
 library(naniar)
+library(kableExtra) #
+library(kknn)
 tidymodels_prefer()
 ```
 
@@ -642,4 +644,115 @@ Heart_data <- Heart_data %>% select(-c(chol, fbs, restecg))
 Heart_data
 ```
 
-### 5.2 
+### 5.2 Data Splitting
+
+Now we're going to walk through the process of splitting the `Heart_data` data set into two, a training set and a test set.
+
+```{r}
+set.seed(1234)
+heart_split <- initial_split(Heart_data, prop = 0.80,
+                                strata = output)
+heart_train <- training(heart_split)
+heart_test <- testing(heart_split)
+```
+
+### 5.3 Creating a Recipe
+
+```{r}
+Heart_data$output <- as.factor(Heart_data$output)
+heart_test$output <- as.factor(heart_test$output)
+```
+
+
+```{r}
+#make recipe
+heart_train$output <- as.factor(heart_train$output)
+heart_recipe <- recipe(output ~., data=heart_train) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes())
+
+```
+
+```{r}
+
+prep(heart_recipe) %>% 
+  bake(new_data = heart_train) %>% 
+  head() %>% 
+  kable() %>% 
+  kable_styling(full_width = F) 
+
+```
+
+### 5.4 5-fold Cross-Validation
+
+```{r}
+heart_folds <- vfold_cv(heart_train, v = 5)
+```
+
+
+## 6. Modelling
+
+### 6.1 k-Nearest Neighbors
+
+```{r}
+knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
+  set_engine("kknn") %>% 
+  set_mode("classification")
+```
+
+
+```{r}
+# tune neighbors from 1 to 10
+neighbors_grid <- grid_regular(neighbors(range = c(1, 10)), levels = 10)
+
+knn_workflow <- workflow() %>%
+  add_model(knn_spec) %>%
+  add_recipe(heart_recipe)
+```
+
+```{r}
+knn_tune_res_class <- tune_grid(
+  object = knn_workflow, 
+  resamples = heart_folds, 
+  grid = neighbors_grid
+)
+```
+
+
+```{r}
+# For k-NN model
+knn_metrics_class <- knn_tune_res_class %>% 
+  collect_metrics()
+```
+
+```{r}
+knn_auc <- knn_metrics_class %>% filter(.metric == "roc_auc") # Filter for AUC metric
+
+# Print AUC results
+print(knn_auc)
+
+```
+From the data provided, the model with 10 neighbors (neighbors = 10) has the highest mean AUC of 0.8939479	. The standard error (std_err) for this model is also relatively low at 0.02220712, which suggests that the performance of the model is relatively stable across different folds of the data. Therefore, based on the data, Model 10 (with 10 neighbors) appears to have the best performance in terms of the area under the ROC curve across the different folds. It has the highest mean AUC and a low standard error, indicating strong and stable predictive performance.
+
+
+```{r}
+best_neighbors_class <- select_by_one_std_err(knn_tune_res_class, desc(neighbors), metric = "roc_auc")
+```
+
+```{r}
+final_wf_knn_class <- finalize_workflow(knn_workflow, best_neighbors_class)
+
+final_fit_knn_class <- fit(final_wf_knn_class, heart_train)
+
+augment(final_fit_knn_class, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+```
+
+
+
+
+
+
+
+
