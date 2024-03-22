@@ -1,1 +1,1005 @@
 # analysis for project
+
+---
+  title: "Heart Attack Analysis & Prediction_project"
+author: "Daemon Wei"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+  toc: true
+toc_float: true
+code_folding: show
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
+```
+
+## 1. Introduction
+
+Heart disease remains the leading cause of death globally, accounting for millions of deaths annually. The ability to accurately predict heart disease can lead to early diagnosis and intervention, significantly reducing the mortality rate associated with this condition. This project aims to leverage data science and machine learning techniques to analyze and predict the likelihood of heart attacks based on a wide range of factors including age, sex, chest pain type, resting blood pressure, serum cholesterol, and more.
+
+Utilizing a dataset from Kaggle, this analysis will explore various features that may influence heart disease, implement several machine learning models to predict heart disease occurrence, and evaluate the performance of these models. The dataset includes diverse variables, offering a comprehensive insight into the factors that might contribute to heart disease.
+
+Through this project, we aim to uncover significant predictors of heart disease, assess the predictive power of machine learning models in a medical context, and ultimately, contribute to the efforts of preventing heart disease by enabling early detection. This endeavor is not only a technical challenge but also a crucial step towards saving lives and improving health outcomes.
+
+As we delve into the data and models, our goal is to present a clear, concise, and informative analysis that can serve as a foundation for further research and practical applications in the field of medical science and public health.
+
+The Heart Attack Analysis & Prediction Dataset on Kaggle includes data relevant for analyzing and predicting heart attacks. To access this dataset, you can visit the [Kaggle dataset page](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset/data).
+### 1.1 Examining the Project Topic
+
+#### What is Heart Attack?
+
+![](image/WhatIsHeartAttack.png)
+
+
+* The medical name of heart attack is “Myocardial infarction”.
+* Heart attack in short; It is the occlusion of the vessel by plaque-like lesions filled with cholesterol and fat. 
+* The lesion is called abnormal conditions that occur in the organs where the disease is located.
+* As a result of the blockage, the blood flow is completely cut off and a heart attack that can lead to death occurs.
+
+#### How does a heart attack occur?
+
+![](image/Vessel.png)
+
+* The heart is like an efficient pump, tirelessly working to circulate blood throughout the body about 60 to 80 times a minute when we're at rest. Just like any other part of the body, the heart itself needs a steady supply of nutrients and oxygen, which it gets through its very own set of blood vessels known as coronary arteries.
+
+* Sometimes, these crucial arteries can have trouble with their blood flow due to blockages or narrowing, a condition known as coronary insufficiency. This issue can vary widely – it all depends on where the blockage is, how severe it is, and the specific arteries affected.
+
+* For some, this might just mean chest pain that pops up during a workout or some physical task, but goes away once they take a break. However, in more serious cases, if a coronary artery gets suddenly completely blocked, it can trigger a heart attack. This often starts with intense chest pain and, in the worst-case scenario, can lead to sudden death.
+
+### 1.2 Recognizing Variables In Dataset
+
+**Variable definitions in the Dataset**
+
+- **_Age_**: Age of the patient
+- **_Sex:_** Sex of the patient
+- **_exang:_** exercise induced angina (1 = yes; 0 = no)
+- **_ca:_** number of major vessels (0-3)
+- **_cp:_** Chest Pain type chest pain type
+    - Value 1: typical angina
+    - Value 2: atypical angina
+    - Value 3: non-anginal pain
+    - Value 4: asymptomatic
+- **_trtbps:_** resting blood pressure (in mm Hg)
+- **_chol:_** cholestoral in mg/dl fetched via BMI sensor
+- **_fbs:_** (fasting blood sugar > 120 mg/dl) (1 = true; 0 = false)
+- **_rest_ecg:_** resting electrocardiographic results
+    - Value 0: normal
+    - Value 1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV)
+    - Value 2: showing probable or definite left ventricular hypertrophy by Estes' criteria
+- **_thalach:_** maximum heart rate achieved
+- **_target:_** 0= less chance of heart attack 1= more chance of heart attack
+
+**Additional variable descriptions to help us**
+  
+  1. age - age in years
+
+2. sex - sex (1 = male; 0 = female)
+
+3. cp - chest pain type (1 = typical angina; 2 = atypical angina; 3 = non-anginal pain; 0 = asymptomatic)
+
+4. trestbps - resting blood pressure (in mm Hg on admission to the hospital)
+
+5. chol - serum cholestoral in mg/dl
+
+6. fbs - fasting blood sugar > 120 mg/dl (1 = true; 0 = false)
+
+7. restecg - resting electrocardiographic results (1 = normal; 2 = having ST-T wave abnormality; 0 = hypertrophy)
+
+8. thalach - maximum heart rate achieved
+
+9. exang - exercise induced angina (1 = yes; 0 = no)
+
+10. oldpeak - ST depression induced by exercise relative to rest
+
+11. slope - the slope of the peak exercise ST segment (2 = upsloping; 1 = flat; 0 = downsloping)
+
+12. ca - number of major vessels (0-3) colored by flourosopy
+
+13. thal - 2 = normal; 1 = fixed defect; 3 = reversable defect
+
+14. num - the predicted attribute - diagnosis of heart disease (angiographic disease status) (Value 0 = < diameter narrowing; Value 1 = > 50% diameter narrowing)
+
+## 2. First Organization
+
+### 2.1 Required Python Libraries
+
+#### 2.1.1 Basic Libraries
+
+```{r}
+library(corrplot)  # for the correlation plot
+library(discrim)  # for linear discriminant analysis
+library(corrr)   # for calculating correlation
+library(knitr)   # to help with the knitting process
+library(MASS)    # to assist with the markdown processes
+library(tidyverse)   # using tidyverse and tidymodels for this project mostly
+library(tidymodels)
+library(ggplot2)   # for most of our visualizations
+library(ggrepel)
+library(rpart.plot)  # for visualizing trees
+library(vip)         # for variable importance 
+library(janitor)     # for cleaning out our data
+library(ranger)   # for building our randomForest
+library(dplyr)     # for basic r functions
+library(yardstick) # for measuring certain metrics
+library(naniar)
+library(kableExtra) #
+library(kknn)
+tidymodels_prefer()
+```
+
+
+#### 2.2 Loading The Dataset
+
+```{r}
+Heart_data <- read_csv("data/heart.csv", show_col_types = FALSE)
+Heart_data
+```
+
+
+## 3. Preparation for Exploratory Data Analysis(EDA)
+
+### 3.1 Examining Missing Values
+
+```{r}
+vis_miss(Heart_data)
+```
+
+This plot shows us at a glance that there is no missing data in the whole dataset.
+
+### 3.2 Examining Unique Values
+
+```{r}
+unique_number <- sapply(Heart_data, function(x) length(unique(x)))
+unique_values_df <- data.frame("Total Unique Values" = unique_number)
+rownames(unique_values_df) <- names(Heart_data)
+print(unique_values_df)
+```
+#### Analysis Outputs(1)
+* **According to the result from the unique value dataframe;** 
+  * We determined the variables with few unique values ​​as categorical variables, and the variables with high unique values ​​as numeric variables.
+* In this context, **Numeric Variables:** “age”, “trtbps”, “chol”, “thalachh” and “oldpeak ”
+* **Categorical Variables:** "sex", "cp", "fbs", "restecg", "exng", "slp", "caa", "thall", "output" 
+
+
+#### 3.3 Separating variables (Numeric or Categorical)
+
+```{r}
+numeric_var <- c("age", "trtbps", "chol", "thalachh", "oldpeak")
+
+categoric_var <- c("sex", "cp", "fbs", "restecg", "exng", "slp", "caa", "thall", "output")
+
+Heart_data %>%
+  select(numeric_var) %>%
+  summary()
+```
+## 4. Exploratory Data Analysis(EDA)
+
+### 4.1 variable Analysis
+
+#### 4.1.1 Numerical Variables(Analysis with **Distplot**)
+
+```{r}
+ggplot(Heart_data, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  ggtitle("Age Distribution") +
+  xlab("Age") +
+  ylab("Frequency")
+```
+
+```{r}
+ggplot(Heart_data, aes(x = trtbps)) +
+  geom_histogram(binwidth = 5, fill = "red", color = "black") +
+  ggtitle(" resting blood pressure (in mm Hg) Distribution") +
+  xlab(" resting blood pressure (in mm Hg)") +
+  ylab("Frequency")
+```
+
+```{r}
+ggplot(Heart_data, aes(x = chol)) +
+  geom_histogram(binwidth = 5, fill = "purple", color = "black") +
+  ggtitle(" cholestoral Distribution") +
+  xlab(" cholestoral") +
+  ylab("Frequency")
+```
+
+
+
+```{r}
+ggplot(Heart_data, aes(x = thalachh)) +
+  geom_histogram(binwidth = 5, fill = "green", color = "black") +
+  ggtitle(" maximum heart rate achieved Distribution") +
+  xlab(" maximum heart rate achieved") +
+  ylab("Frequency")
+```
+
+
+```{r}
+ggplot(Heart_data, aes(x = oldpeak)) +
+  geom_histogram(binwidth = 0.5, fill = "blue", color = "black") +
+  ggtitle(" ST depression induced by exercise relative to rest Distribution") +
+  xlab(" ST depression induced by exercise relative to rest") +
+  ylab("Frequency")
+```
+
+
+
+
+```{r}
+heart_data_summary_sex <- Heart_data %>%
+  count(sex) %>%
+  mutate(perc = n / sum(n))
+
+ggplot(heart_data_summary_sex, aes(x = "", y = n, fill = factor(sex))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#FF5733", "#33B5FF")) +
+  labs(title = "sex (Gender)", fill = "sex") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))   
+```
+
+```{r}
+heart_data_summary_cp <- Heart_data %>%
+  count(cp) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF", "#CDDC39", "#9C27B0")
+
+ggplot(heart_data_summary_cp, aes(x = "", y = n, fill = factor(cp))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "cp (Chest Pain type )", fill = "cp") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+```{r}
+heart_data_summary_fbs <- Heart_data %>%
+  count(fbs) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF")
+
+
+
+ggplot(heart_data_summary_fbs, aes(x = "", y = n, fill = factor(fbs))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "fbs (fasting blood sugar )", fill = "fbs") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_restecg <- Heart_data %>%
+  count(restecg) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#33B5FF", "#CDDC39")
+
+
+
+ggplot(heart_data_summary_restecg, aes(x = "", y = n, fill = factor(restecg))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "restecg (resting electrocardiographic results)", fill = "restecg") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_exng <- Heart_data %>%
+  count(exng) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#CDDC39")
+
+
+
+ggplot(heart_data_summary_exng, aes(x = "", y = n, fill = factor(exng))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "exng (exercise induced angina)", fill = "exng") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_slp <- Heart_data %>%
+  count(slp) %>%
+  mutate(perc = n / sum(n))
+
+colors <- c("#FF5733", "#CDDC39", "#9C27B0")
+
+
+
+ggplot(heart_data_summary_slp, aes(x = "", y = n, fill = factor(slp))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = colors) +
+  labs(title = "slp (the slope of the peak exercise ST segment)", fill = "slp") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_caa <- Heart_data %>%
+  count(caa) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_caa, aes(x = "", y = n, fill = factor(caa))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "caa (number of major vessels)", fill = "caa") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_thall <- Heart_data %>%
+  count(thall) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_thall, aes(x = "", y = n, fill = factor(thall))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "thall (Thallium stress test)", fill = "thall") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+```{r}
+heart_data_summary_output <- Heart_data %>%
+  count(output) %>%
+  mutate(perc = n / sum(n))
+
+
+ggplot(heart_data_summary_output, aes(x = "", y = n, fill = factor(output))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(perc)), position = position_stack(vjust = 0.5)) +
+  labs(title = "output (diagnosis of heart disease)", fill = "output") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, color = "darkred", size = 15, face = "bold"),
+        legend.text = element_text(color = "darkblue", size = 13, face = "bold"))
+```
+
+
+
+#### 4.1.2.2 Examining the Missing Data According to the Analysis Result
+
+```{r}
+thal_zero_rows <- Heart_data %>% filter(thall == 0)
+thal_zero_rows
+```
+
+```{r}
+# 0 will be filled with 2 that is most common value in thall
+Heart_data$thall[Heart_data$thall == 0] <- 2
+
+unique_thal_categories <- unique(Heart_data$thall)
+unique_thal_categories
+```
+
+```{r}
+vis_miss(Heart_data)
+```
+
+#### 4.2.3 Numerical Variables - Categorical Variables (Analysis with **Box Plot**)
+
+```{r}
+Heart_data_long <- Heart_data %>%
+  gather(key = "variables", value = "value", trtbps, chol, thalachh)
+
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(sex))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "Sex") 
+
+```
+
+```{r}
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(cp))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "Cp") 
+```
+
+```{r}
+ggplot(Heart_data_long, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output") 
+```
+
+```{r}
+Heart_data_long_2 <- Heart_data %>%
+  gather(key = "variables", value = "value",age)
+
+ggplot(Heart_data_long_2, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output") 
+```
+
+```{r}
+Heart_data_long_3 <- Heart_data %>%
+  gather(key = "variables", value = "value",oldpeak)
+
+ggplot(Heart_data_long_3, aes(x = variables, y = value, fill = factor(output))) +
+  geom_boxplot() +
+  labs(title = "Numerical Variables - Categorical Variables (Box Plot)",
+       x = "Variables",
+       y = "Value",
+       fill = "output")
+```
+
+
+
+```{r}
+cor_mat <- cor(Heart_data)
+corrplot(cor_mat, method = "color", 
+         addCoef.col = "black",   
+         tl.cex = 0.8,            
+         number.cex = 0.6,        
+         cl.cex = 0.8,            
+         tl.col = "black",        
+         tl.srt = 45,             
+         order = "hclust" )            
+
+```
+
+
+## 5. Preparation for Modeling
+
+### 5.1 Dropping Columns with Low Correlation
+
+```{r}
+Heart_data <- Heart_data %>% select(-c(chol, fbs, restecg))
+Heart_data
+```
+
+### 5.2 Data Splitting
+
+Now we're going to walk through the process of splitting the `Heart_data` data set into two, a training set and a test set.
+
+```{r}
+set.seed(1234)
+heart_split <- initial_split(Heart_data, prop = 0.80,
+                                strata = output)
+heart_train <- training(heart_split)
+heart_test <- testing(heart_split)
+```
+
+### 5.3 Creating a Recipe
+
+```{r}
+Heart_data$output <- as.factor(Heart_data$output)
+heart_test$output <- as.factor(heart_test$output)
+```
+
+
+```{r}
+#make recipe
+heart_train$output <- as.factor(heart_train$output)
+heart_recipe <- recipe(output ~., data=heart_train) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes())
+
+```
+
+```{r}
+
+prep(heart_recipe) %>% 
+  bake(new_data = heart_train) %>% 
+  head() %>% 
+  kable() %>% 
+  kable_styling(full_width = F) 
+
+```
+
+### 5.4 5-fold Cross-Validation
+
+```{r}
+heart_folds <- vfold_cv(heart_train, v = 5)
+```
+
+
+## 6. Modelling
+
+### 6.1 k-Nearest Neighbors
+
+```{r}
+knn_spec <- nearest_neighbor(neighbors = tune()) %>% 
+  set_engine("kknn") %>% 
+  set_mode("classification")
+```
+
+
+```{r}
+# tune neighbors from 1 to 10
+neighbors_grid <- grid_regular(neighbors(range = c(1, 10)), levels = 10)
+
+knn_workflow <- workflow() %>%
+  add_model(knn_spec) %>%
+  add_recipe(heart_recipe)
+```
+
+```{r}
+knn_tune_res_class <- tune_grid(
+  object = knn_workflow, 
+  resamples = heart_folds, 
+  grid = neighbors_grid
+)
+```
+
+
+```{r}
+# For k-NN model
+knn_metrics_class <- knn_tune_res_class %>% 
+  collect_metrics()
+```
+
+```{r}
+knn_auc <- knn_metrics_class %>% filter(.metric == "roc_auc") # Filter for AUC metric
+
+# Print AUC results
+print(knn_auc)
+
+```
+From the data provided, the model with 10 neighbors (neighbors = 10) has the highest mean AUC of 0.8939479	. The standard error (std_err) for this model is also relatively low at 0.02220712, which suggests that the performance of the model is relatively stable across different folds of the data. Therefore, based on the data, Model 10 (with 10 neighbors) appears to have the best performance in terms of the area under the ROC curve across the different folds. It has the highest mean AUC and a low standard error, indicating strong and stable predictive performance.
+
+
+```{r}
+best_neighbors_class <- select_by_one_std_err(knn_tune_res_class, desc(neighbors), metric = "roc_auc")
+```
+
+```{r}
+final_wf_knn_class <- finalize_workflow(knn_workflow, best_neighbors_class)
+
+final_fit_knn_class <- fit(final_wf_knn_class, heart_train)
+
+augment(final_fit_knn_class, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+```
+The output tibble shows a ROC AUC of 0.9339 on the test set, indicating that the model also has strong classification ability on unseen data. It is noteworthy that the ROC AUC value on the test set is even higher than the average value in cross-validation, which is a very positive result. However, caution should be taken to consider the possibility of overly optimistic evaluations or data leakage.
+
+Overall, this result should provide a high level of confidence, indicating that the model is likely to perform well in practical applications. 
+
+We can calculate accuracies on the training data:
+
+```{r}
+knn_acc_train <- augment(final_fit_knn_class, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+knn_acc_train
+```
+
+We can calculate accuracies on the testing data:
+
+```{r}
+knn_acc_test <- augment(final_fit_knn_class, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+knn_acc_test
+```
+The model's accuracy on the training data is approximately 91.32%, while on the testing data, it is around 83.61%. These figures indicate that the KNN model is performing quite well, although it exhibits some degree of overfitting, as indicated by the higher accuracy on the training data compared to the testing data. 
+
+
+### 6.2 Logistic Regression
+
+
+```{r}
+
+log_reg <- logistic_reg() %>% 
+  set_engine("glm") %>% 
+  set_mode("classification")
+```
+
+```{r}
+log_wkflow <- workflow() %>% 
+  add_model(log_reg) %>% 
+  add_recipe(heart_recipe)
+
+log_fit_results <- fit(log_wkflow,heart_train)
+
+log_fit_results %>% tidy()
+```
+We can use each of these models to generate probability predictions for the training data:
+  
+  ```{r}
+predict(log_fit_results, new_data = heart_train, type = "prob")
+```
+
+However, it’s more useful to summarize the predicted values. We can use augment() to attach the predicted values to the data, then generate a confusion matrix for Heart:
+  
+  ```{r}
+augment(log_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+We can calculate accuracies on the training data:
+  
+  ```{r}
+log_acc_train <- augment(log_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+log_acc_train
+```
+
+
+Let’s calculate the accuracy of the logistic regression model, or the average number of correct predictions it made on the testing data.
+
+```{r}
+augment(log_fit_results, new_data = heart_test) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+We can calculate accuracies on the testing data:
+  
+  ```{r}
+log_acc_test <- augment(log_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+log_acc_test
+```
+```{r}
+log_roc_train <- augment(log_fit_results, new_data = heart_train) %>%
+  roc_auc(output, .pred_0)
+log_roc_train
+```
+
+```{r}
+log_roc_test <- augment(log_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+log_roc_test
+```
+
+
+let’s look at an ROC curve on the testing data:
+  
+  ```{r}
+augment(log_fit_results, new_data = heart_test) %>%
+  roc_curve(output, .pred_0) %>%
+  autoplot()
+```
+
+
+### 6.3 LDA (linear discriminant analysis)
+
+```{r}
+# Specify the linear discriminant analysis model
+lda_model <- discrim_linear() %>%
+  set_engine("MASS") %>%
+  set_mode("classification")
+
+
+# Create the workflow with the LDA model
+lda_workflow <- workflow() %>%
+  add_model(lda_model) %>%
+  add_recipe(heart_recipe)
+
+# Fit the LDA model
+lda_fit_results <- fit(lda_workflow, data = heart_train)
+```
+
+```{r}
+augment(lda_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+
+  
+  ```{r}
+lda_acc_train <- augment(lda_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+lda_acc_train
+```
+
+  
+  ```{r}
+lda_acc_test <- augment(lda_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+lda_acc_test
+```
+accuracy on the testing data is greater than that of training data.
+
+```{r}
+lda_roc_test <- augment(lda_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+lda_roc_test
+```
+
+### 6.4 QDA (quadratic discriminant analysis)
+
+```{r}
+# Specify the quadratic discriminant analysis model
+qda_model <- discrim_quad() %>%
+  set_engine("MASS") %>%
+  set_mode("classification")
+
+# Create the workflow with the QDA model
+qda_workflow <- workflow() %>%
+  add_model(qda_model) %>%
+  add_recipe(heart_recipe)
+
+qda_fit_results <- fit(qda_workflow, data = heart_train)
+```
+
+```{r}
+augment(qda_fit_results, new_data = heart_train) %>%
+  conf_mat(truth = output, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+We can calculate accuracies on the training data:
+  
+  ```{r}
+qda_acc_train <- augment(qda_fit_results, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+qda_acc_train
+```
+
+We can calculate accuracies on the testing data:
+  
+  ```{r}
+qda_acc_test <- augment(qda_fit_results, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+qda_acc_test
+```
+These results suggest that the model performs well on both the training and unseen testing data, although there is a slight decrease in performance on the testing data, which is common as models generally perform slightly better on the data they were trained on.
+
+```{r}
+qda_roc_test <- augment(qda_fit_results, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+qda_roc_test
+```
+
+### 6.5 Regularized Regression
+
+```{r}
+en_spec_lm_class <- logistic_reg(mixture = tune(),
+                                 penalty = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+en_grid <- grid_regular(penalty(range = c(0, 1)),
+                        mixture(range = c(0, 1)),
+                        levels = 10)
+
+en_workflow_lm_class <- workflow()%>%
+  add_model(en_spec_lm_class) %>%
+  add_recipe(heart_recipe)
+```
+
+```{r}
+en_tune_res_class <- tune_grid(
+  object = en_workflow_lm_class, 
+  resamples = heart_folds, 
+  grid = en_grid
+)
+```
+
+```{r}
+# For elastic net logistic regression model
+en_metrics_class <- en_tune_res_class %>% 
+  collect_metrics()
+
+en_auc <- en_metrics_class %>% filter(.metric == "roc_auc")
+
+# Print AUC results
+print(en_auc)
+```
+
+```{r}
+best_en_class <- select_best(en_tune_res_class, metric = "roc_auc")
+
+en_wf_final_class <- finalize_workflow(en_workflow_lm_class, best_en_class)
+
+# Fit the finalized workflow to the training set
+final_fit_en_class <- fit(en_wf_final_class, data = heart_train)
+
+```
+
+We can calculate accuracies on the training data:
+  
+  ```{r}
+en_acc_train <- augment(final_fit_en_class, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+en_acc_train
+```
+We can calculate accuracies on the testing data:
+  
+  ```{r}
+en_acc_test <- augment(final_fit_en_class, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+en_acc_test
+```
+```{r}
+en_roc_test <- augment(final_fit_en_class, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+en_roc_test
+```
+
+### 6.6 Pruned Decision Trees
+
+```{r}
+tree_spec <- decision_tree(cost_complexity = tune()) %>%
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+tree_wf <- workflow() %>% 
+  add_model(tree_spec) %>% 
+  add_recipe(heart_recipe)
+```
+
+```{r}
+param_grid <- grid_regular(cost_complexity(range = c(-5, -1)), levels = 10)
+
+tune_tree <- tune_grid(
+  tree_wf, 
+  resamples = heart_folds, 
+  grid = param_grid
+)
+```
+
+
+```{r}
+autoplot(tune_tree)
+```
+
+```{r}
+best_complexity <- select_best(tune_tree)
+
+tree_final <- finalize_workflow(tree_wf, best_complexity)
+
+tree_final_fit <- fit(tree_final, data = heart_train)
+best_complexity
+```
+
+
+
+```{r}
+tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot()
+```
+
+
+  
+  ```{r}
+tree_acc_train <- augment(tree_final_fit, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+tree_acc_train
+```
+We can calculate accuracies on the testing data:
+  
+  ```{r}
+tree_acc_test <- augment(tree_final_fit, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+tree_acc_test
+```
+
+The accuracy on the training data is approximately 86.36%, and it decreases to about 78.69% on the testing data. This drop in accuracy from training to testing suggests that the decision tree model might be overfitting to the training data or not generalizing well to new, unseen data.
+
+
+```{r}
+tree_roc_test <- augment(tree_final_fit, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+tree_roc_test
+```
+
+### 6.7 Random Forest
+
+```{r}
+rf_class_spec <- rand_forest(mtry = tune(), 
+                             trees = tune(), 
+                             min_n = tune()) %>%
+  set_engine("ranger", importance = "impurity") %>% 
+  set_mode("classification")
+
+rf_class_wf <- workflow() %>% 
+  add_model(rf_class_spec) %>% 
+  add_recipe(heart_recipe)
+```
+
+```{r}
+rf_grid <- grid_regular(mtry(range = c(1, 10)), 
+                        trees(range = c(200, 600)),
+                        min_n(range = c(10, 20)),
+                        levels = 5)
+
+rf_tune_class <- tune_grid(
+  rf_class_wf,
+  resamples = heart_folds,
+  grid = rf_grid
+)
+```
+
+
+```{r}
+save(rf_tune_class, file = "rf_tune_class.rda")
+load("rf_tune_class.rda")
+```
+
+```{r}
+autoplot(rf_tune_class) + theme_minimal()
+```
+```{r}
+best_rf_class <- select_best(rf_tune_class)
+best_rf_class
+```
+```{r}
+final_rf_model <- finalize_workflow(rf_class_wf, best_rf_class)
+final_rf_model <- fit(final_rf_model, heart_train)
+```
+
+```{r}
+final_rf_model %>% extract_fit_parsnip() %>% 
+  vip() +
+  theme_minimal()
+```
+
+
+  
+  ```{r}
+rf_acc_train <- augment(final_rf_model, new_data = heart_train) %>%
+  accuracy(truth = output, estimate = .pred_class)
+rf_acc_train
+```
+
+
+  
+  ```{r}
+rf_acc_test <- augment(final_rf_model, new_data = heart_test) %>%
+  accuracy(truth = output, estimate = .pred_class)
+rf_acc_test
+```
+The model’s accuracy is reported to be approximately 91.32% on the training data, with a slight decrease to about 90.16% on the testing data. These results indicate that the random forest model has a strong performance and generalizes well to unseen data, with only a small drop in accuracy between the training and testing sets, which suggests a good balance between bias and variance.
+
+```{r}
+rf_roc_test <- augment(final_rf_model, new_data = heart_test) %>%
+  roc_auc(output, .pred_0)
+rf_roc_test
+```
+
